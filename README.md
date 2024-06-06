@@ -4,7 +4,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/maxlcoder/laravel-desensitization.svg?style=flat-square)](https://packagist.org/packages/maxlcoder/laravel-desensitization)
 ![GitHub Actions](https://github.com/maxlcoder/laravel-desensitization/actions/workflows/main.yml/badge.svg)
 
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
+针对 API 的敏感数据处理的中间，配置形式，脱敏函数和脱敏方法均自定义
 
 ## Installation
 
