@@ -48,8 +48,14 @@ php artisan vendor:publish --provider="Maxlcoder\LaravelDesensitization\LaravelD
 
 ## Usage
 
+在 `Kerner.php` 中引入中间件
+
 ```php
-// Usage description here
+protected $routeMiddleware = [
+        ...
+        
+        'desensitization' => \Maxlcoder\LaravelDesensitization\Http\Middleware\Desensitization::class,
+    ];
 ```
 
 ### Testing
