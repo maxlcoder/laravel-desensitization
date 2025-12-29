@@ -4,7 +4,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/maxlcoder/laravel-desensitization.svg?style=flat-square)](https://packagist.org/packages/maxlcoder/laravel-desensitization)
 ![GitHub Actions](https://github.com/maxlcoder/laravel-desensitization/actions/workflows/main.yml/badge.svg)
 
-针对 API 的敏感数据处理的中间，配置形式，脱敏函数和脱敏方法均自定义
+针对 API 的敏感数据处理的中间键，配置形式，脱敏函数和脱敏方法均可高度自定义
 
 ## Installation
 
@@ -21,8 +21,8 @@ php artisan vendor:publish --provider="Maxlcoder\LaravelDesensitization\LaravelD
 ```
 
 * functions: 脱敏使用的全局辅助函数，例如 'mobile' => 'desensitiseMobile'，使用全局辅助函数 desensitiseMobile 对 uris 中配置的 type 为 mobile 类型的 key 做执行脱敏 
-* class: 全局自定义脱敏类, name 表示类的全路径，这里只能填字符串，functions 表示类中脱敏类型对应的脱敏方法
-* functions 和 class 优先使用 functions 全局辅助函数，当全局辅助函数没有指定，才使用 class. 如果二者均没有配置，则不处理脱敏，但是会有 error 日志提示
+* class: 全局自定义脱敏类, name 表示类的全路径，这里只能填字符串，functions 表示自定义脱敏类中不同类型对应的脱敏方法
+* functions 和 class 优先使用 functions 全局辅助函数，当全局辅助函数没有指定，才使用全局自定义脱敏类 class . 如果二者均没有配置，则不处理脱敏，但是会有 error 日志提示
 * uris: 全局需要进行脱敏的接口，以及接口返回中需要脱敏的字段名和脱敏类型，系统会对返回的数据结构做解析，并进行迭代脱敏，其中数组 * 表示返回的数据是数组
 
 ```php
@@ -57,6 +57,97 @@ protected $routeMiddleware = [
         'desensitization' => \Maxlcoder\LaravelDesensitization\Http\Middleware\Desensitization::class,
     ];
 ```
+
+### Example
+
+1. 示例接口 `admin/admins`, 脱敏前返回结果
+```json
+{
+    "code": 200,
+    "msg": "success",
+    "data": {
+        "mobile": "18900000001",
+        "contacts": [
+            {
+                "name": "王组闲",
+                "mobile": "18900000002"
+            }
+        ]
+    }
+}
+```
+2. 配置
+修改文件 `config/laravel-desensitization.php`
+```php
+<?php
+
+/*
+ * You can place your custom package configuration in here.
+ *
+ */
+return [
+    'functions' => [
+
+    ],
+    'class' => [
+        'name' => 'App\Lib\Desensitization',
+        'functions' => [
+            'name' => 'desensitiseRealName',
+            'mobile' => 'desensitiseMobile'
+        ],
+    ],
+    'uris' => [
+        'admin/admins' => [
+            ['key' => 'data.mobile', 'type' => 'mobile'],
+            ['key' => 'data.contacts.*.name', 'type' => 'name'],
+            ['key' => 'data.contacts.*.mobile', 'type' => 'mobile'],
+        ],
+    ],
+];
+```
+其中自定义脱敏类 `Desensitization.php` 中定义的脱敏方法分别是 
+
+```php
+<?php
+
+namespace App\Lib;
+
+use Illuminate\Support\Str;
+
+class Desensitization
+{
+    public static function desensitiseMobile($mobile)
+    {
+        return mb_substr($mobile, 0, 3) . '****' . mb_substr($mobile, 7, 4);
+    }
+
+    public static function desensitiseName($name)
+    {
+        return Str::mask($name, '*', 0, 1);
+
+    }
+}
+```
+
+3. 接口脱敏结果
+
+```json
+{
+    "code": 200,
+    "msg": "success",
+    "data": {
+        "mobile": "189****0001",
+        "contacts": [
+            {
+                "name": "*组闲",
+                "mobile": "189****0002"
+            }
+        ]
+    }
+}
+```
+
+
 
 ### Testing
 
